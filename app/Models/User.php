@@ -17,13 +17,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'mobile',
     'email',
     'password',
+    'pin',
     'role',
     'rating',
     'total_ratings',
     'is_kyc_verified',
     'status',
 ])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'pin', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -38,7 +39,9 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'mobile_verified_at' => 'datetime',
             'password' => 'hashed',
+            'pin' => 'hashed',
         ];
     }
 
