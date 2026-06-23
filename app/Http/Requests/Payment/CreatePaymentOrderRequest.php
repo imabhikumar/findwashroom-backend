@@ -14,7 +14,7 @@ class CreatePaymentOrderRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'booking_id' => ['required', 'integer', 'exists:bookings,id'],
+            'booking_id' => ['required', 'integer', 'min:1', 'exists:bookings,id'],
         ];
     }
 }

@@ -10,4 +10,13 @@ class ComplaintRepository
     {
         return Complaint::create($payload);
     }
+
+    public function hasOpenByBookingAndRaisedBy(int $bookingId, int $raisedBy): bool
+    {
+        return Complaint::query()
+            ->where('booking_id', $bookingId)
+            ->where('raised_by', $raisedBy)
+            ->where('status', 'pending')
+            ->exists();
+    }
 }

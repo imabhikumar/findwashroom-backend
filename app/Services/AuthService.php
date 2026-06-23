@@ -18,10 +18,15 @@ class AuthService
         $otp = (string) random_int(100000, 999999);
         $this->otpRepository->createOtp($mobile, $otp);
 
-        return [
-            'otp' => $otp,
+        $data = [
             'expires_in_minutes' => 5,
         ];
+
+        if (config('app.debug')) {
+            $data['otp'] = $otp;
+        }
+
+        return $data;
     }
 
     public function verifyOtp(string $mobile, string $otp): array
@@ -35,6 +40,8 @@ class AuthService
             ['mobile' => $mobile],
             ['name' => 'User '.Str::substr($mobile, -4)]
         );
+
+        $this->otpRepository->consume($otpRecord);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 

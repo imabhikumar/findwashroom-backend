@@ -54,4 +54,24 @@ class User extends Authenticatable
     {
         return $this->hasMany(Booking::class, 'customer_id');
     }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'reviewer_id');
+    }
+
+    public function complaints(): HasMany
+    {
+        return $this->hasMany(Complaint::class, 'raised_by');
+    }
+
+    public function cleaningJobsAsOwner(): HasMany
+    {
+        return $this->hasMany(CleaningJob::class, 'owner_id');
+    }
+
+    public function cleaningJobsAsCleaner(): HasMany
+    {
+        return $this->hasMany(CleaningJob::class, 'assigned_cleaner_id');
+    }
 }

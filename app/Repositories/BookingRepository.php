@@ -20,9 +20,29 @@ class BookingRepository
     public function findByIdAndCustomer(int $bookingId, int $customerId): ?Booking
     {
         return Booking::query()
+            ->with('property')
             ->where('id', $bookingId)
             ->where('customer_id', $customerId)
             ->first();
+    }
+
+    public function findByIdAndCustomerForUpdate(int $bookingId, int $customerId): ?Booking
+    {
+        return Booking::query()
+            ->with('property')
+            ->where('id', $bookingId)
+            ->where('customer_id', $customerId)
+            ->lockForUpdate()
+            ->first();
+    }
+
+    public function hasOpenBookingForCustomerProperty(int $customerId, int $propertyId): bool
+    {
+        return Booking::query()
+            ->where('customer_id', $customerId)
+            ->where('property_id', $propertyId)
+            ->whereIn('status', ['pending', 'active'])
+            ->exists();
     }
 
     public function getByCustomer(int $customerId): Collection

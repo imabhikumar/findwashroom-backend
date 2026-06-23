@@ -15,7 +15,7 @@ class CleaningJobRepository
     public function getOpenJobs(): Collection
     {
         return CleaningJob::query()
-            ->with(['property', 'owner'])
+            ->with(['property', 'owner', 'cleaner'])
             ->where('status', 'open')
             ->latest('id')
             ->get();
@@ -31,6 +31,15 @@ class CleaningJobRepository
         return CleaningJob::query()
             ->where('id', $jobId)
             ->where('owner_id', $ownerId)
+            ->first();
+    }
+
+    public function findOpenByIdForUpdate(int $jobId): ?CleaningJob
+    {
+        return CleaningJob::query()
+            ->where('id', $jobId)
+            ->where('status', 'open')
+            ->lockForUpdate()
             ->first();
     }
 

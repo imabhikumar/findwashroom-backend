@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\ReviewController;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+Route::post('/send-otp', [AuthController::class, 'sendOtp']);
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/auth/send-otp', [AuthController::class, 'sendOtp']);
 Route::post('/auth/verify-otp', [AuthController::class, 'verifyOtp']);
 

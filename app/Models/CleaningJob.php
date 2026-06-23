@@ -16,6 +16,10 @@ class CleaningJob extends Model
         'proof_image_path',
     ];
 
+    protected $casts = [
+        'price_offer' => 'decimal:2',
+    ];
+
     public function property(): BelongsTo
     {
         return $this->belongsTo(Property::class);

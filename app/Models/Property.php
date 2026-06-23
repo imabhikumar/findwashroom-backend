@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Property extends Model
 {
@@ -22,6 +23,15 @@ class Property extends Model
         'is_active'
     ];
 
+    protected $casts = [
+        'latitude' => 'decimal:7',
+        'longitude' => 'decimal:7',
+        'price_per_use' => 'decimal:2',
+        'average_rating' => 'decimal:2',
+        'total_reviews' => 'integer',
+        'is_active' => 'boolean',
+    ];
+
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
@@ -35,5 +45,10 @@ class Property extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
+    }
+
+    public function complaints(): HasManyThrough
+    {
+        return $this->hasManyThrough(Complaint::class, Booking::class, 'property_id', 'booking_id', 'id', 'id');
     }
 }

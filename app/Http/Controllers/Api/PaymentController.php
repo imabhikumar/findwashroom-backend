@@ -36,11 +36,15 @@ class PaymentController extends Controller
             $data = $this->paymentService->verifyPayment(
                 (int) auth()->id(),
                 (int) $request->validated('booking_id'),
-                $request->validated('payment_id')
+                $request->validated('order_id'),
+                $request->validated('payment_id'),
+                $request->validated('signature')
             );
             return $this->successResponse('Payment verified successfully.', $data);
         } catch (NotFoundHttpException $e) {
             return $this->errorResponse($e->getMessage(), null, 404);
+        } catch (BadRequestHttpException $e) {
+            return $this->errorResponse($e->getMessage(), null, 400);
         }
     }
 }

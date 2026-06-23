@@ -16,12 +16,22 @@ class Complaint extends Model
         'admin_note',
     ];
 
+    protected $casts = [
+        'booking_id' => 'integer',
+        'raised_by' => 'integer',
+    ];
+
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
     }
 
     public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'raised_by');
+    }
+
+    public function raisedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'raised_by');
     }

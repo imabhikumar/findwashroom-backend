@@ -15,6 +15,10 @@ class Review extends Model
         'comment',
     ];
 
+    protected $casts = [
+        'rating' => 'integer',
+    ];
+
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);

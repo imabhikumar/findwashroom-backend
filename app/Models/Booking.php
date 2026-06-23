@@ -34,6 +34,11 @@ class Booking extends Model
         return $this->belongsTo(User::class, 'customer_id');
     }
 
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'customer_id');
+    }
+
     public function payment(): HasOne
     {
         return $this->hasOne(Payment::class);

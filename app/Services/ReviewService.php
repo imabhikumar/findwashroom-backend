@@ -18,32 +18,30 @@ class ReviewService
 
     public function create(int $customerId, array $payload)
     {
-        $booking = $this->bookingRepository->findByIdAndCustomer((int) $payload['booking_id'], $customerId);
-        if (! $booking) {
-            throw new NotFoundHttpException('Booking not found.');
-        }
-        if ($booking->status !== 'completed') {
-            throw new BadRequestHttpException('Review allowed only after booking completion.');
-        }
-        if ($this->reviewRepository->findByBookingId($booking->id)) {
-            throw new BadRequestHttpException('Review already submitted for this booking.');
-        }
+        return DB::transaction(function () use ($customerId, $payload) {
+            $booking = $this->bookingRepository->findByIdAndCustomerForUpdate((int) $payload['booking_id'], $customerId);
+            if (! $booking) {
+                throw new NotFoundHttpException('Booking not found.');
+            }
+            if ($booking->status !== 'completed') {
+                throw new BadRequestHttpException('Review allowed only after booking completion.');
+            }
+            if ($this->reviewRepository->findByBookingId($booking->id)) {
+                throw new BadRequestHttpException('Review already submitted for this booking.');
+            }
 
-        $review = $this->reviewRepository->create([
-            'booking_id' => $booking->id,
-            'reviewer_id' => $customerId,
-            'property_id' => $booking->property_id,
-            'rating' => $payload['rating'],
-            'comment' => $payload['comment'] ?? null,
-        ]);
+            $review = $this->reviewRepository->create([
+                'booking_id' => $booking->id,
+                'reviewer_id' => $customerId,
+                'property_id' => $booking->property_id,
+                'rating' => $payload['rating'],
+                'comment' => $payload['comment'] ?? null,
+            ]);
 
-        $avg = DB::table('reviews')->where('property_id', $booking->property_id)->avg('rating');
-        $count = DB::table('reviews')->where('property_id', $booking->property_id)->count();
-        $booking->property->update([
-            'average_rating' => round((float) $avg, 2),
-            'total_reviews' => $count,
-        ]);
+            $aggregate = $this->reviewRepository->getPropertyAggregate((int) $booking->property_id);
+            $booking->property->update($aggregate);
 
-        return $review;
+            return $review;
+        });
     }
 }

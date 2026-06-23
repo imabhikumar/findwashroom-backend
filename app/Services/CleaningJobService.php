@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Repositories\CleaningJobRepository;
 use App\Repositories\PropertyRepository;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -37,18 +38,17 @@ class CleaningJobService
 
     public function accept(int $cleanerId, int $jobId)
     {
-        $job = $this->cleaningJobRepository->findById($jobId);
-        if (! $job) {
-            throw new NotFoundHttpException('Cleaning job not found.');
-        }
-        if ($job->status !== 'open') {
-            throw new BadRequestHttpException('Job is not available for acceptance.');
-        }
+        return DB::transaction(function () use ($cleanerId, $jobId) {
+            $job = $this->cleaningJobRepository->findOpenByIdForUpdate($jobId);
+            if (! $job) {
+                throw new NotFoundHttpException('Cleaning job not found or already assigned.');
+            }
 
-        return $this->cleaningJobRepository->update($job, [
-            'assigned_cleaner_id' => $cleanerId,
-            'status' => 'assigned',
-        ]);
+            return $this->cleaningJobRepository->update($job, [
+                'assigned_cleaner_id' => $cleanerId,
+                'status' => 'assigned',
+            ]);
+        });
     }
 
     public function uploadProof(int $cleanerId, int $jobId, string $proofPath)
@@ -59,6 +59,9 @@ class CleaningJobService
         }
         if ((int) $job->assigned_cleaner_id !== $cleanerId) {
             throw new NotFoundHttpException('Cleaning job not assigned to this cleaner.');
+        }
+        if ($job->status !== 'assigned') {
+            throw new BadRequestHttpException('Proof can be uploaded only for assigned jobs.');
         }
 
         return $this->cleaningJobRepository->update($job, [

@@ -25,8 +25,11 @@ class ComplaintService
         if ($booking->status !== 'completed' || ! $booking->end_time) {
             throw new BadRequestHttpException('Complaint is allowed only after completed booking.');
         }
-        if (Carbon::parse($booking->end_time)->diffInHours(Carbon::now()) > 24) {
+        if ($booking->end_time->lt(Carbon::now()->subHours(24))) {
             throw new BadRequestHttpException('Complaint window is closed (24 hours).');
+        }
+        if ($this->complaintRepository->hasOpenByBookingAndRaisedBy((int) $booking->id, $customerId)) {
+            throw new BadRequestHttpException('An open complaint already exists for this booking.');
         }
 
         return $this->complaintRepository->create([

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Booking;
 
 use App\Http\Requests\ApiFormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreBookingRequest extends ApiFormRequest
 {
@@ -14,7 +15,11 @@ class StoreBookingRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'property_id' => ['required', 'integer', 'exists:properties,id'],
+            'property_id' => [
+                'required',
+                'integer',
+                Rule::exists('properties', 'id')->where(fn ($query) => $query->where('is_active', true)),
+            ],
         ];
     }
 }

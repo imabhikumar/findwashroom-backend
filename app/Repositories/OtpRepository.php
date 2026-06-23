@@ -25,4 +25,9 @@ class OtpRepository
             ->latest('id')
             ->first();
     }
+
+    public function consume(Otp $otp): void
+    {
+        $otp->delete();
+    }
 }
