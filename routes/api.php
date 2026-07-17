@@ -93,4 +93,19 @@ Route::prefix('v1/admin')->group(function () {
         Route::get('/activity', [\App\Http\Controllers\Api\AdminActivityController::class, 'index']);
         Route::get('/activity/suspicious', [\App\Http\Controllers\Api\AdminActivityController::class, 'suspicious']);
     });
+
+    // routes/api.php - Add these lines
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+    // Wallet routes
+    Route::get('/wallet', [WalletController::class, 'summary']);
+    Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
+    Route::post('/wallet/payout', [WalletController::class, 'requestPayout']);
+    
+    // Admin wallet management
+    Route::prefix('admin')->middleware('admin')->group(function () {
+        Route::get('/wallets', [WalletController::class, 'adminList']);
+        Route::put('/wallets/{id}/status', [WalletController::class, 'updateStatus']);
+        Route::post('/wallets/{id}/adjust', [WalletController::class, 'adjustBalance']);
+    });
+});
 });
