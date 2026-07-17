@@ -109,3 +109,27 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     });
 });
 });
+// routes/api.php - Add these lines
+Route::prefix('v1')->group(function () {
+    // Public routes for browsing
+    Route::get('/properties/{propertyId}/service-units', [ServiceUnitController::class, 'index']);
+    Route::get('/properties/{propertyId}/service-units/available', [ServiceUnitController::class, 'available']);
+    Route::get('/service-units/types', [ServiceUnitController::class, 'types']);
+    Route::get('/service-units/{id}', [ServiceUnitController::class, 'show']);
+
+    Route::get('/properties/{propertyId}/products', [ProductController::class, 'index']);
+    Route::get('/properties/{propertyId}/products/available', [ProductController::class, 'available']);
+    Route::get('/products/categories', [ProductController::class, 'categories']);
+    Route::get('/products/{id}', [ProductController::class, 'show']);
+
+    // Protected partner routes
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/partner/service-units', [ServiceUnitController::class, 'store']);
+        Route::put('/partner/service-units/{id}', [ServiceUnitController::class, 'update']);
+        Route::put('/partner/service-units/{id}/status/{status}', [ServiceUnitController::class, 'status']);
+
+        Route::post('/partner/products', [ProductController::class, 'store']);
+        Route::put('/partner/products/{id}', [ProductController::class, 'update']);
+        Route::post('/partner/products/{id}/stock', [ProductController::class, 'updateStock']);
+    });
+});

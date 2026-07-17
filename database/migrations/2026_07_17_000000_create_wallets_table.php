@@ -25,14 +25,14 @@ return new class extends Migration
         Schema::create('wallet_transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('wallet_id')->constrained()->cascadeOnDelete();
-            $table->string('transaction_type'); // credit, debit, refund, commission, adjustment, penalty
+            $table->string('transaction_type',30); // credit, debit, refund, commission, adjustment, penalty
             $table->decimal('amount', 15, 2);
             $table->decimal('balance_after', 15, 2);
             $table->string('reference_type')->nullable(); // booking, payment, payout, deposit
             $table->unsignedBigInteger('reference_id')->nullable();
             $table->text('description')->nullable();
             $table->json('metadata')->nullable();
-            $table->string('status')->default('completed'); // pending, completed, failed, reversed
+            $table->string('status',20)->default('completed'); // pending, completed, failed, reversed
             $table->timestamps();
             
             $table->index(['wallet_id', 'created_at']);

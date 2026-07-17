@@ -17,7 +17,7 @@ class BookingService
     ) {
     }
 
-    public function create(int $customerId, array $payload)
+    public function create(int $customerId, array $payload): Booking
     {
         $property = $this->propertyRepository->findById((int) $payload['property_id']);
         if (! $property || ! $property->is_active) {
@@ -31,6 +31,32 @@ class BookingService
         if ($this->bookingRepository->hasOpenBookingForCustomerProperty($customerId, (int) $property->id)) {
             throw new BadRequestHttpException('You already have an active or pending booking for this property.');
         }
+
+// Attach service units to booking
+    if (isset($data['service_unit_ids'])) {
+        foreach ($data['service_unit_ids'] as $unitId) {
+            $unit = $this->serviceUnitService->getServiceUnitDetails($unitId);
+            if (!$unit || !$unit->hasCapacity()) {
+                throw new \Exception('Service unit not available');
+            }
+            
+            $booking->serviceUnits()->attach($unitId, [
+                'duration_minutes' => $data['duration'] ?? $unit->default_duration_minutes,
+                'price' => $unit->price,
+            ]);
+        }
+    }
+    
+    // Attach products to booking
+    if (isset($data['product_ids'])) {
+        foreach ($data['product_ids'] as $productId) {
+            $this->productService->deductStock($productId, 1);
+            $booking->products()->attach($productId, [
+                'quantity' => 1,
+                'price' => Product::find($productId)->price,
+            ]);
+        }
+    }
 
         return $this->bookingRepository->create([
             'property_id' => $property->id,

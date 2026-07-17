@@ -112,6 +112,24 @@ class PaymentService
                 'order_id' => $orderId,
                 'payment_id' => $paymentId,
             ];
+
+            // Add money to customer's wallet (if applicable)
+    $this->walletService->addMoney(
+        $userId,
+        $booking->amount,
+        'booking',
+        $bookingId,
+        "Booking #{$bookingId} payment credited"
+    );
+    
+    // Add commission to platform wallet
+    $this->walletService->addMoney(
+        1, // platform user ID
+        $commission,
+        'commission',
+        $bookingId,
+        "Commission from booking #{$bookingId}"
+    );
         });
     }
 
