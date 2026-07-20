@@ -1,4 +1,3 @@
-// app/Http/Resources/ServiceUnitResource.php
 <?php
 
 namespace App\Http\Resources;

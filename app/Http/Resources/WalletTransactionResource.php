@@ -1,4 +1,3 @@
-// app/Http/Resources/WalletTransactionResource.php
 <?php
 
 namespace App\Http\Resources;

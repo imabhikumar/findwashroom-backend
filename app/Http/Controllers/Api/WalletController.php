@@ -1,4 +1,3 @@
-// app/Http/Controllers/Api/WalletController.php
 <?php
 
 namespace App\Http\Controllers\Api;

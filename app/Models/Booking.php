@@ -5,9 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Traits\HasUUID;
+use App\Traits\AuditLoggable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Booking extends Model
 {
+        use HasUUID, AuditLoggable, SoftDeletes;
+
     protected $fillable = [
         'property_id',
         'customer_id',

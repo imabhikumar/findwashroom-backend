@@ -1,4 +1,3 @@
-// app/Repositories/ProductRepository.php
 <?php
 
 namespace App\Repositories;

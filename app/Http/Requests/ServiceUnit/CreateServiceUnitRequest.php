@@ -1,4 +1,3 @@
-// app/Http/Requests/ServiceUnit/CreateServiceUnitRequest.php
 <?php
 
 namespace App\Http\Requests\ServiceUnit;

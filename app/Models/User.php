@@ -11,6 +11,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\HasUUID;
+use App\Traits\AuditLoggable;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 #[Fillable([
     'name',
@@ -27,6 +31,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Hidden(['password', 'pin', 'remember_token'])]
 class User extends Authenticatable
 {
+        use HasApiTokens, HasFactory, Notifiable, HasUUID, AuditLoggable, SoftDeletes;
+
     /** @use HasFactory<UserFactory> */
     use HasApiTokens,HasFactory, Notifiable;
 

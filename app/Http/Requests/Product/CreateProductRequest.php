@@ -1,4 +1,3 @@
-// app/Http/Requests/Product/CreateProductRequest.php
 <?php
 
 namespace App\Http\Requests\Product;

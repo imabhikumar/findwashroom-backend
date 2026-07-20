@@ -21,37 +21,24 @@ class AdminRepository
             ->first();
     }
 
-    public function findOrCreateAdminByOtp(string $channel, string $identifier): Admin
+    public function findOrCreateAdminByOtp(string $identifier): User
     {
-        // IMPORTANT: users.email and users.mobile are unique.
-        // If the identifier exists for a non-admin role, we must not attempt to insert
-        // a new admin row (it would violate unique constraints).
-        $existingUser = User::query()
-            ->where(function ($q) use ($identifier) {
-                $q->where('email', $identifier)->orWhere('mobile', $identifier);
-            })
+        // Try to find admin
+        $admin = User::where('email', $identifier)
+            ->where('role', 'admin')
             ->first();
-
-        if ($existingUser) {
-            if (($existingUser->role ?? null) !== 'admin') {
-                // Caller will treat this as "not authorized".
-                throw new \Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException('', 'Not an admin.');
-            }
-
-            /** @var Admin $existingUser */
-            return $existingUser;
+            
+        if (!$admin) {
+            // Create admin if not exists
+            $admin = User::create([
+                'name' => 'Admin User',
+                'email' => $identifier,
+                'role' => 'admin',
+                'status' => 'active',
+            ]);
         }
-
-        $defaults = [
-            'name' => 'Admin ' . Str::substr(preg_replace('/\\D+/', '', $identifier), -4),
-            'role' => 'admin',
-        ];
-
-        if ($channel === 'email') {
-            return Admin::query()->firstOrCreate(['role' => 'admin', 'email' => $identifier], $defaults);
-        }
-
-        return Admin::query()->firstOrCreate(['role' => 'admin', 'mobile' => $identifier], $defaults);
+        
+        return $admin;
     }
 
     public function createAdminOtp(string $channel, string $identifier, string $otp, int $expiresInMinutes = 5): AdminOtp

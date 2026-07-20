@@ -11,6 +11,10 @@ use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PropertyController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\TrustController;
+use App\Http\Controllers\Api\ServiceUnitController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\WalletController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -132,4 +136,16 @@ Route::prefix('v1')->group(function () {
         Route::put('/partner/products/{id}', [ProductController::class, 'update']);
         Route::post('/partner/products/{id}/stock', [ProductController::class, 'updateStock']);
     });
+    // routes/api.php - Add these lines
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+    Route::get('/trust/score', [TrustController::class, 'myTrustScore']);
+    Route::get('/trust/badges', [TrustController::class, 'myBadges']);
+    Route::get('/trust/summary', [TrustController::class, 'trustSummary']);
+    Route::get('/trust/property/{propertyId}/badges', [TrustController::class, 'propertyBadges']);
+});
+// routes/api.php - Add these lines
+Route::prefix('v1')->middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::get('/audit-logs', [AuditLogController::class, 'index']);
+    Route::get('/audit-logs/{id}', [AuditLogController::class, 'show']);
+});
 });

@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('auth_otps', function (Blueprint $table) {
             $table->id();
             $table->string('channel', 10); // sms | email
-            // 191 keeps composite index under older MySQL limits with utf8mb4.
-            $table->string('identifier', 191); // mobile (digits) or email
+            // '191' keeps composite index under older MySQL limits with utf8mb4.
+            $table->string('identifier', '191'); // mobile (digits) or email
             $table->string('otp_hash');
             $table->timestamp('expires_at');
             $table->timestamp('consumed_at')->nullable();

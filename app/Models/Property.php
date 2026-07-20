@@ -6,9 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use App\Traits\HasUUID;
+use App\Traits\AuditLoggable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Property extends Model
 {
+
+    use HasUUID, AuditLoggable, SoftDeletes;
+
     protected $fillable = [
         'owner_id',
         'name',

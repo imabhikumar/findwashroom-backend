@@ -1,4 +1,3 @@
-// app/Services/ProductService.php
 <?php
 
 namespace App\Services;

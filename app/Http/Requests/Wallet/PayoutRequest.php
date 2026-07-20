@@ -1,4 +1,3 @@
-// app/Http/Requests/Wallet/PayoutRequest.php
 <?php
 
 namespace App\Http\Requests\Wallet;

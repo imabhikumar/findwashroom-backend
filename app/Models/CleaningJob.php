@@ -4,9 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\HasUUID;
+use App\Traits\AuditLoggable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CleaningJob extends Model
 {
+        use HasUUID, AuditLoggable, SoftDeletes;
+
     protected $fillable = [
         'property_id',
         'owner_id',

@@ -1,4 +1,3 @@
-// app/Models/WalletTransaction.php
 <?php
 
 namespace App\Models;
