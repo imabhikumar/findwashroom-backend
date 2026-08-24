@@ -1,0 +1,778 @@
+openapi: 3.0.0
+info:
+  title: Enterprise Task Management API
+  description: Complete task management system with CRUD, filtering, pagination, soft delete, bulk operations, webhooks, audit logs, and more.
+  version: 2.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: https://api.example.com/v2
+    description: Production Server
+  - url: http://localhost:3000/v2
+    description: Local Development Server
+
+tags:
+  - name: Tasks
+    description: Core task management operations
+  - name: Bulk Operations
+    description: Batch operations for tasks
+  - name: Comments
+    description: Task comments management
+  - name: History
+    description: Audit logs and task history
+  - name: Webhooks
+    description: Webhook registration and management
+
+paths:
+  /tasks:
+    get:
+      tags:
+        - Tasks
+      summary: Get all tasks with advanced filtering
+      operationId: getTasks
+      parameters:
+        - name: page
+          in: query
+          description: Page number (default 1)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Items per page (default 20, max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sortBy
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+            enum: [id, title, status, priority, createdAt, updatedAt, dueDate]
+            default: createdAt
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [pending, in-progress, completed, archived]
+        - name: priority
+          in: query
+          description: Filter by priority
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: assignedTo
+          in: query
+          description: Filter by assigned user ID
+          schema:
+            type: integer
+        - name: search
+          in: query
+          description: Search in title and description
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      tags:
+        - Tasks
+      summary: Create a new task
+      operationId: createTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  maxLength: 200
+                  description: Task title
+                  example: Buy groceries
+                description:
+                  type: string
+                  maxLength: 2000
+                  description: Task description
+                  example: Milk, Eggs, Bread, Pasta
+                status:
+                  type: string
+                  enum: [pending, in-progress, completed, archived]
+                  default: pending
+                priority:
+                  type: string
+                  enum: [low, medium, high, critical]
+                  default: medium
+                assignedTo:
+                  type: integer
+                  description: User ID to assign the task to
+                dueDate:
+                  type: string
+                  format: date-time
+                  description: Due date
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: Labels for categorization
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /tasks/{id}:
+    get:
+      tags:
+        - Tasks
+      summary: Get task by ID
+      operationId: getTaskById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    put:
+      tags:
+        - Tasks
+      summary: Full update of task
+      operationId: updateTask
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: If-Match
+          in: header
+          description: ETag for optimistic locking
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  maxLength: 200
+                description:
+                  type: string
+                  maxLength: 2000
+                status:
+                  type: string
+                  enum: [pending, in-progress, completed, archived]
+                priority:
+                  type: string
+                  enum: [low, medium, high, critical]
+                assignedTo:
+                  type: integer
+                dueDate:
+                  type: string
+                  format: date-time
+                tags:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    delete:
+      tags:
+        - Tasks
+      summary: Delete task (soft delete by default)
+      operationId: deleteTask
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: permanent
+          in: query
+          description: Permanently delete (admin only)
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '204':
+          description: Task deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /tasks/{id}/restore:
+    post:
+      tags:
+        - Tasks
+      summary: Restore soft-deleted task
+      operationId: restoreTask
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /tasks/{id}/assign:
+    post:
+      tags:
+        - Tasks
+      summary: Assign task to a user
+      operationId: assignTask
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: integer
+                  description: User ID to assign the task to
+      responses:
+        '200':
+          description: Task assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /tasks/{id}/unassign:
+    post:
+      tags:
+        - Tasks
+      summary: Unassign task from user
+      operationId: unassignTask
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task unassigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /tasks/{id}/status:
+    patch:
+      tags:
+        - Tasks
+      summary: Change task status with validation
+      operationId: changeTaskStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [pending, in-progress, completed, archived]
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /tasks/{id}/comments:
+    get:
+      tags:
+        - Comments
+      summary: Get all comments for a task
+      operationId: getTaskComments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Comments retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comment'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      tags:
+        - Comments
+      summary: Add a comment to a task
+      operationId: addTaskComment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+                - userId
+              properties:
+                text:
+                  type: string
+                  maxLength: 1000
+                  description: Comment text
+                  example: Please complete this by EOD
+                userId:
+                  type: integer
+                  description: User ID who is commenting
+      responses:
+        '201':
+          description: Comment added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /tasks/{id}/history:
+    get:
+      tags:
+        - History
+      summary: Get audit history of a task
+      operationId: getTaskHistory
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: History retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/History'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /webhooks:
+    get:
+      tags:
+        - Webhooks
+      summary: Get all registered webhooks
+      operationId: getWebhooks
+      responses:
+        '200':
+          description: Webhooks retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Webhook'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      tags:
+        - Webhooks
+      summary: Register a new webhook
+      operationId: registerWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - events
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: Webhook URL to receive callbacks
+                  example: https://client-app.com/webhooks
+                events:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - task.created
+                      - task.updated
+                      - task.completed
+                      - task.deleted
+                      - task.assigned
+                      - task.unassigned
+                secret:
+                  type: string
+                  description: Secret for signature verification
+      responses:
+        '201':
+          description: Webhook registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /webhooks/{id}:
+    delete:
+      tags:
+        - Webhooks
+      summary: Delete a webhook
+      operationId: deleteWebhook
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Webhook deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique task identifier
+          example: 1
+        title:
+          type: string
+          description: Task title
+          example: Buy groceries
+        description:
+          type: string
+          description: Task description
+          example: Milk, Eggs, Bread, Pasta
+        status:
+          type: string
+          enum: [pending, in-progress, completed, archived]
+          description: Current status
+          example: pending
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+          description: Priority level
+          example: high
+        assignedTo:
+          type: integer
+          nullable: true
+          description: ID of assigned user
+          example: 42
+        createdBy:
+          type: integer
+          description: ID of task creator
+          example: 10
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Task due date
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the task was completed
+        tags:
+          type: array
+          items:
+            type: string
+          description: Labels for categorization
+          example: ["urgent", "personal"]
+        isDeleted:
+          type: boolean
+          description: Soft delete flag
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+        version:
+          type: integer
+          description: Version number for optimistic locking
+          example: 3
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        text:
+          type: string
+        userId:
+          type: integer
+        userName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    History:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        taskId:
+          type: integer
+        field:
+          type: string
+          description: Field that changed
+        oldValue:
+          type: string
+          nullable: true
+        newValue:
+          type: string
+          nullable: true
+        changedBy:
+          type: integer
+        changedAt:
+          type: string
+          format: date-time
+
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+        secret:
+          type: string
+        isActive:
+          type: boolean
+          default: true
+        createdAt:
+          type: string
+          format: date-time
+        lastTriggeredAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code for programmatic handling
+          example: ERR_003
+        message:
+          type: string
+          description: Human-readable error message
+          example: Invalid status transition
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
+        timestamp:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized - API key missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflict - Business rule violation or version mismatch
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+security:
+  - ApiKeyAuth: []
