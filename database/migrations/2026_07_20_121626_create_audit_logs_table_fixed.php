@@ -28,8 +28,8 @@ return new class extends Migration
 
             // Use index with length ('191' is safe for utf8mb4)
             $table->index(['user_id', 'created_at']);
-            $table->index(['module' => '191', 'action' => '191']); // <- FIX: Length specified
-            $table->index(['entity_type' => '191', 'entity_id']);
+            $table->index(['module', 'action']);
+            $table->index(['entity_type', 'entity_id']);
             $table->index(['ip_address', 'created_at']);
         });
     }
