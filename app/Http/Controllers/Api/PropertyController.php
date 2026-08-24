@@ -6,6 +6,7 @@ use App\Http\Requests\Property\StorePropertyRequest;
 use App\Http\Requests\Property\UpdatePropertyRequest;
 use App\Http\Controllers\Controller;
 use App\Services\PropertyService;
+use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class PropertyController extends Controller
@@ -14,19 +15,19 @@ class PropertyController extends Controller
     {
     }
 
-    public function store(StorePropertyRequest $request)
+    public function store(StorePropertyRequest $request): JsonResponse
     {
         $property = $this->propertyService->create((int) auth()->id(), $request->validated());
         return $this->successResponse('Property created successfully.', $property);
     }
 
-    public function myProperties()
+    public function myProperties(): JsonResponse
     {
         $properties = $this->propertyService->ownerList((int) auth()->id());
         return $this->successResponse('Owner properties fetched successfully.', $properties);
     }
 
-    public function update(UpdatePropertyRequest $request, int $id)
+    public function update(UpdatePropertyRequest $request, int $id): JsonResponse
     {
         try {
             $property = $this->propertyService->update((int) auth()->id(), $id, $request->validated());
@@ -36,13 +37,13 @@ class PropertyController extends Controller
         }
     }
 
-    public function index()
+    public function index(): JsonResponse
     {
         $properties = $this->propertyService->publicList();
         return $this->successResponse('Properties fetched successfully.', $properties);
     }
 
-    public function show(int $id)
+    public function show(int $id): JsonResponse
     {
         try {
             $property = $this->propertyService->detail($id);

@@ -7,6 +7,7 @@ use App\Http\Requests\ServiceUnit\CreateServiceUnitRequest;
 use App\Http\Requests\ServiceUnit\UpdateServiceUnitRequest;
 use App\Http\Resources\ServiceUnitResource;
 use App\Services\ServiceUnitService;
+use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ServiceUnitController extends Controller
@@ -27,7 +28,7 @@ class ServiceUnitController extends Controller
         return $this->successResponse('Available service units fetched.', ServiceUnitResource::collection($units));
     }
 
-    public function types()
+    public function types(): JsonResponse
     {
         $types = $this->serviceUnitService->getServiceTypes();
         return $this->successResponse('Service types fetched.', $types);

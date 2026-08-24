@@ -8,13 +8,14 @@ use App\Models\Wallet;
 use App\Models\User;
 use App\Models\Transaction;
 use App\Models\Payout;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class WalletController extends Controller
 {
     // ============== USER ENDPOINTS ==============
     
-    public function summary()
+    public function summary(): JsonResponse
     {
         return response()->json([
             'success' => true,
@@ -27,7 +28,7 @@ class WalletController extends Controller
         ]);
     }
 
-    public function stats()
+    public function stats(): JsonResponse
     {
         return response()->json([
             'success' => true,

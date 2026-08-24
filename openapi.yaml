@@ -1,0 +1,2102 @@
+openapi: 3.0.3
+info:
+  title: FindWashroom Backend API
+  description: >-
+    Complete RESTful API for FindWashroom - a property/washroom booking and management platform.
+    Supports multi-role authentication (admin, owner, customer, cleaner), property management,
+    booking system, payments (Razorpay), reviews, complaints, and wallet management.
+  version: 1.0.0
+  contact:
+    name: FindWashroom Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000/api
+    description: Local development server
+  - url: https://api.findwashroom.com/api
+    description: Production server
+
+tags:
+  - name: Health
+    description: API health check endpoints
+  - name: Authentication
+    description: Public authentication endpoints (OTP, login, register)
+  - name: Customer Account
+    description: Authenticated customer account operations
+  - name: Properties
+    description: Property browsing and management
+  - name: Service Units
+    description: Property amenities and features
+  - name: Products
+    description: Property inventory and product catalog
+  - name: Bookings
+    description: Booking creation and management
+  - name: Payments
+    description: Payment processing and verification
+  - name: Reviews
+    description: Property reviews and ratings
+  - name: Complaints
+    description: Issue reporting and complaint management
+  - name: Cleaning Jobs
+    description: Cleaning task assignment and management
+  - name: Wallet
+    description: User wallet and transaction management
+  - name: Trust
+    description: Trust score and reputation system
+  - name: Admin
+    description: Admin authentication and dashboard operations
+  - name: Audit
+    description: Audit logs and admin activity tracking
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+      description: Sanctum API token. Get token from login endpoints.
+
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Operation successful
+        data:
+          type: object
+          nullable: true
+          additionalProperties: true
+        meta:
+          type: object
+          nullable: true
+          additionalProperties: true
+      required:
+        - success
+        - message
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Validation failed
+        data:
+          type: object
+          nullable: true
+          additionalProperties: true
+      required:
+        - success
+        - message
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        mobile:
+          type: string
+        role:
+          type: string
+          enum: [customer, owner, admin, cleaner]
+        rating:
+          type: number
+          format: float
+        total_ratings:
+          type: integer
+        is_kyc_verified:
+          type: boolean
+        status:
+          type: string
+          enum: [active, inactive, suspended]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Property:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+        price_per_use:
+          type: number
+          format: float
+        description:
+          type: string
+        is_active:
+          type: boolean
+        owner_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+
+    ServiceUnit:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        property_id:
+          type: string
+          format: uuid
+        service_type:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        is_available:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        property_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          type: string
+        price:
+          type: number
+          format: float
+        stock:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        property_id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+          nullable: true
+        amount:
+          type: number
+          format: float
+        status:
+          type: string
+          enum: [pending, active, completed, cancelled]
+        payment_status:
+          type: string
+          enum: [pending, paid, failed]
+        created_at:
+          type: string
+          format: date-time
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        booking_id:
+          type: string
+          format: uuid
+        razorpay_order_id:
+          type: string
+        razorpay_payment_id:
+          type: string
+          nullable: true
+        amount:
+          type: number
+          format: float
+        status:
+          type: string
+          enum: [pending, paid, failed]
+        created_at:
+          type: string
+          format: date-time
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        property_id:
+          type: string
+          format: uuid
+        reviewer_id:
+          type: string
+          format: uuid
+        booking_id:
+          type: string
+          format: uuid
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Complaint:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        property_id:
+          type: string
+          format: uuid
+        raised_by:
+          type: string
+          format: uuid
+        subject:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high]
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+        created_at:
+          type: string
+          format: date-time
+
+    CleaningJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        property_id:
+          type: string
+          format: uuid
+        owner_id:
+          type: string
+          format: uuid
+        assigned_cleaner_id:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          type: string
+          enum: [open, assigned, in_progress, completed, cancelled]
+        scheduled_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+
+    Wallet:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        balance:
+          type: number
+          format: float
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive]
+        created_at:
+          type: string
+          format: date-time
+
+    WalletTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        wallet_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [credit, debit]
+        amount:
+          type: number
+          format: float
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    TrustScore:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        level:
+          type: string
+          enum: [new, bronze, silver, gold, platinum]
+        badges:
+          type: array
+          items:
+            type: string
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+          nullable: true
+        entity_type:
+          type: string
+        entity_id:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum: [created, updated, deleted]
+        changes:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+
+paths:
+  /hello:
+    get:
+      tags: [Health]
+      summary: API Health Check
+      description: Public endpoint to verify API is working
+      operationId: healthCheck
+      responses:
+        '200':
+          description: API is working
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+
+  # Authentication - Public Endpoints
+  /send-otp:
+    post:
+      tags: [Authentication]
+      summary: Send OTP (Legacy)
+      operationId: sendOtpLegacy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile]
+              properties:
+                mobile:
+                  type: string
+      responses:
+        '200':
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /verify-otp:
+    post:
+      tags: [Authentication]
+      summary: Verify OTP (Legacy)
+      operationId: verifyOtpLegacy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile, otp]
+              properties:
+                mobile:
+                  type: string
+                otp:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/auth/send-otp:
+    post:
+      tags: [Authentication]
+      summary: Send OTP
+      operationId: sendOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile]
+              properties:
+                mobile:
+                  type: string
+      responses:
+        '200':
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/auth/verify-otp:
+    post:
+      tags: [Authentication]
+      summary: Verify OTP
+      operationId: verifyOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile, otp]
+              properties:
+                mobile:
+                  type: string
+                otp:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/customer/register:
+    post:
+      tags: [Authentication]
+      summary: Register Customer
+      operationId: registerCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                mobile:
+                  type: string
+                password:
+                  type: string
+                pin:
+                  type: string
+      responses:
+        '200':
+          description: Customer registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/customer/login/otp/request:
+    post:
+      tags: [Authentication]
+      summary: Request OTP Login
+      operationId: requestOtpLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, identifier]
+              properties:
+                channel:
+                  type: string
+                  enum: [sms, email]
+                identifier:
+                  type: string
+      responses:
+        '200':
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/customer/login/otp/verify:
+    post:
+      tags: [Authentication]
+      summary: Verify OTP Login
+      operationId: verifyOtpLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, identifier, otp]
+              properties:
+                channel:
+                  type: string
+                  enum: [sms, email]
+                identifier:
+                  type: string
+                otp:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/customer/login/password:
+    post:
+      tags: [Authentication]
+      summary: Login with Password
+      operationId: loginWithPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifier, password]
+              properties:
+                identifier:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/customer/login/pin:
+    post:
+      tags: [Authentication]
+      summary: Login with PIN
+      operationId: loginWithPin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifier, pin]
+              properties:
+                identifier:
+                  type: string
+                pin:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Customer Account - Protected
+  /v1/customer/me:
+    get:
+      tags: [Customer Account]
+      summary: Get Current User
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/customer/logout:
+    post:
+      tags: [Customer Account]
+      summary: Logout Customer
+      operationId: logoutCustomer
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/customer/set-password:
+    post:
+      tags: [Customer Account]
+      summary: Set Password
+      operationId: setPassword
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Password set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/customer/set-pin:
+    post:
+      tags: [Customer Account]
+      summary: Set PIN
+      operationId: setPin
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pin]
+              properties:
+                pin:
+                  type: string
+      responses:
+        '200':
+          description: PIN set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Properties - Public
+  /v1/properties:
+    get:
+      tags: [Properties]
+      summary: List Public Properties
+      operationId: listProperties
+      responses:
+        '200':
+          description: List of properties
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Property'
+
+  /v1/properties/{id}:
+    get:
+      tags: [Properties]
+      summary: Get Property Details
+      operationId: getPropertyDetails
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Property details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Properties - Owner Protected
+  /v1/owner/properties:
+    post:
+      tags: [Properties]
+      summary: Create Property
+      operationId: createProperty
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, address, city, latitude, longitude, price_per_use]
+              properties:
+                name:
+                  type: string
+                address:
+                  type: string
+                city:
+                  type: string
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+                price_per_use:
+                  type: number
+                description:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Property created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+    get:
+      tags: [Properties]
+      summary: List Owner Properties
+      operationId: listOwnerProperties
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of owned properties
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Property'
+
+  /v1/owner/properties/{id}:
+    put:
+      tags: [Properties]
+      summary: Update Property
+      operationId: updateProperty
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                address:
+                  type: string
+                city:
+                  type: string
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+                price_per_use:
+                  type: number
+                description:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Property updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Service Units
+  /v1/properties/{propertyId}/service-units:
+    get:
+      tags: [Service Units]
+      summary: List Service Units
+      operationId: listServiceUnits
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of service units
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ServiceUnit'
+
+  /v1/properties/{propertyId}/service-units/available:
+    get:
+      tags: [Service Units]
+      summary: List Available Service Units
+      operationId: listAvailableServiceUnits
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of available service units
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ServiceUnit'
+
+  /v1/service-units/types:
+    get:
+      tags: [Service Units]
+      summary: List Service Types
+      operationId: listServiceTypes
+      responses:
+        '200':
+          description: List of service types
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/service-units/{id}:
+    get:
+      tags: [Service Units]
+      summary: Get Service Unit Details
+      operationId: getServiceUnitDetails
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Service unit details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/partner/service-units:
+    post:
+      tags: [Service Units]
+      summary: Create Service Unit
+      operationId: createServiceUnit
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [property_id, service_type, name]
+              properties:
+                property_id:
+                  type: string
+                  format: uuid
+                service_type:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+                is_available:
+                  type: boolean
+      responses:
+        '200':
+          description: Service unit created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/partner/service-units/{id}:
+    put:
+      tags: [Service Units]
+      summary: Update Service Unit
+      operationId: updateServiceUnit
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Service unit updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/partner/service-units/{id}/status/{status}:
+    put:
+      tags: [Service Units]
+      summary: Update Service Unit Status
+      operationId: updateServiceUnitStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: path
+          required: true
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Products
+  /v1/properties/{propertyId}/products:
+    get:
+      tags: [Products]
+      summary: List Products
+      operationId: listProducts
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+
+  /v1/properties/{propertyId}/products/available:
+    get:
+      tags: [Products]
+      summary: List Available Products
+      operationId: listAvailableProducts
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of available products
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+
+  /v1/products/categories:
+    get:
+      tags: [Products]
+      summary: List Product Categories
+      operationId: listProductCategories
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/products/{id}:
+    get:
+      tags: [Products]
+      summary: Get Product Details
+      operationId: getProductDetails
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/partner/products:
+    post:
+      tags: [Products]
+      summary: Create Product
+      operationId: createProduct
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [property_id, name, category, price, stock]
+              properties:
+                property_id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                category:
+                  type: string
+                price:
+                  type: number
+                  format: float
+                stock:
+                  type: integer
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/partner/products/{id}:
+    put:
+      tags: [Products]
+      summary: Update Product
+      operationId: updateProduct
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/partner/products/{id}/stock:
+    post:
+      tags: [Products]
+      summary: Update Stock
+      operationId: updateProductStock
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stock]
+              properties:
+                stock:
+                  type: integer
+      responses:
+        '200':
+          description: Stock updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Bookings
+  /v1/bookings:
+    post:
+      tags: [Bookings]
+      summary: Create Booking
+      operationId: createBooking
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [property_id]
+              properties:
+                property_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+    get:
+      tags: [Bookings]
+      summary: List Bookings
+      operationId: listBookings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Booking'
+
+  /v1/bookings/{id}/start:
+    post:
+      tags: [Bookings]
+      summary: Start Booking
+      operationId: startBooking
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Booking started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/bookings/{id}/end:
+    post:
+      tags: [Bookings]
+      summary: End Booking
+      operationId: endBooking
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Booking ended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Payments
+  /v1/payments/order:
+    post:
+      tags: [Payments]
+      summary: Create Payment Order
+      operationId: createPaymentOrder
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [booking_id]
+              properties:
+                booking_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Payment order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/payments/verify:
+    post:
+      tags: [Payments]
+      summary: Verify Payment
+      operationId: verifyPayment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [razorpay_payment_id, razorpay_order_id, razorpay_signature]
+              properties:
+                razorpay_payment_id:
+                  type: string
+                razorpay_order_id:
+                  type: string
+                razorpay_signature:
+                  type: string
+      responses:
+        '200':
+          description: Payment verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Reviews
+  /v1/reviews:
+    post:
+      tags: [Reviews]
+      summary: Create Review
+      operationId: createReview
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [property_id, booking_id, rating]
+              properties:
+                property_id:
+                  type: string
+                  format: uuid
+                booking_id:
+                  type: string
+                  format: uuid
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Complaints
+  /v1/complaints:
+    post:
+      tags: [Complaints]
+      summary: Create Complaint
+      operationId: createComplaint
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [property_id, subject, description]
+              properties:
+                property_id:
+                  type: string
+                  format: uuid
+                booking_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                subject:
+                  type: string
+                description:
+                  type: string
+                priority:
+                  type: string
+                  enum: [low, medium, high]
+      responses:
+        '200':
+          description: Complaint created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Cleaning Jobs
+  /v1/owner/cleaning-jobs:
+    post:
+      tags: [Cleaning Jobs]
+      summary: Create Cleaning Job
+      operationId: createCleaningJob
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [property_id, scheduled_date]
+              properties:
+                property_id:
+                  type: string
+                  format: uuid
+                scheduled_date:
+                  type: string
+                  format: date
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Cleaning job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/cleaner/cleaning-jobs:
+    get:
+      tags: [Cleaning Jobs]
+      summary: List Open Cleaning Jobs
+      operationId: listCleaningJobs
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of cleaning jobs
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CleaningJob'
+
+  /v1/cleaner/cleaning-jobs/{id}/accept:
+    post:
+      tags: [Cleaning Jobs]
+      summary: Accept Cleaning Job
+      operationId: acceptCleaningJob
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Job accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/cleaner/cleaning-jobs/{id}/proof:
+    post:
+      tags: [Cleaning Jobs]
+      summary: Upload Cleaning Proof
+      operationId: uploadCleaningProof
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [proof]
+              properties:
+                proof:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Proof uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Wallet
+  /v1/wallet:
+    get:
+      tags: [Wallet]
+      summary: Get Wallet Summary
+      operationId: getWalletSummary
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Wallet summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/wallet/transactions:
+    get:
+      tags: [Wallet]
+      summary: Get Wallet Transactions
+      operationId: getWalletTransactions
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Transaction history
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/WalletTransaction'
+
+  /v1/wallet/add-money:
+    post:
+      tags: [Wallet]
+      summary: Add Money to Wallet
+      operationId: addMoneyToWallet
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: number
+                  format: float
+                  minimum: 1
+      responses:
+        '200':
+          description: Money added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/wallet/request-payout:
+    post:
+      tags: [Wallet]
+      summary: Request Payout
+      operationId: requestPayout
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: number
+                  format: float
+                  minimum: 1
+      responses:
+        '200':
+          description: Payout requested
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Trust
+  /v1/trust/score:
+    get:
+      tags: [Trust]
+      summary: Get Trust Score
+      operationId: getTrustScore
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Trust score
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/trust/badges:
+    get:
+      tags: [Trust]
+      summary: Get User Badges
+      operationId: getUserBadges
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User badges
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/trust/summary:
+    get:
+      tags: [Trust]
+      summary: Get Trust Summary
+      operationId: getTrustSummary
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Trust summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/trust/property/{propertyId}/badges:
+    get:
+      tags: [Trust]
+      summary: Get Property Badges
+      operationId: getPropertyBadges
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Property badges
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Admin Authentication
+  /v1/admin/login/otp/request:
+    post:
+      tags: [Admin]
+      summary: Request Admin OTP
+      operationId: requestAdminOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, identifier]
+              properties:
+                channel:
+                  type: string
+                  enum: [sms, email]
+                identifier:
+                  type: string
+      responses:
+        '200':
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/admin/login/otp/verify:
+    post:
+      tags: [Admin]
+      summary: Verify Admin OTP
+      operationId: verifyAdminOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, identifier, otp]
+              properties:
+                channel:
+                  type: string
+                  enum: [sms, email]
+                identifier:
+                  type: string
+                otp:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/admin/login/pin:
+    post:
+      tags: [Admin]
+      summary: Admin PIN Login
+      operationId: adminLoginWithPin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifier, pin]
+              properties:
+                identifier:
+                  type: string
+                pin:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Admin Protected
+  /v1/admin/me:
+    get:
+      tags: [Admin]
+      summary: Get Admin Profile
+      operationId: getAdminProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Admin profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/admin/logout:
+    post:
+      tags: [Admin]
+      summary: Admin Logout
+      operationId: adminLogout
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/admin/set-pin:
+    post:
+      tags: [Admin]
+      summary: Set Admin PIN
+      operationId: setAdminPin
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pin]
+              properties:
+                pin:
+                  type: string
+      responses:
+        '200':
+          description: PIN set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/admin/dashboard:
+    get:
+      tags: [Admin]
+      summary: Get Dashboard
+      operationId: getAdminDashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/admin/activity:
+    get:
+      tags: [Admin]
+      summary: Get Activity Logs
+      operationId: getAdminActivity
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Activity logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/admin/activity/suspicious:
+    get:
+      tags: [Admin]
+      summary: Get Suspicious Activity
+      operationId: getSuspiciousActivity
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Suspicious activity logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/admin/wallets:
+    get:
+      tags: [Admin]
+      summary: List All Wallets
+      operationId: listAllWallets
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of wallets
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Wallet'
+
+  /v1/admin/wallets/{id}/status:
+    put:
+      tags: [Admin]
+      summary: Update Wallet Status
+      operationId: updateWalletStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [active, inactive]
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /v1/admin/wallets/{id}/adjust:
+    post:
+      tags: [Admin]
+      summary: Adjust Wallet Balance
+      operationId: adjustWalletBalance
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: float
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Balance adjusted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Audit Logs
+  /v1/audit-logs:
+    get:
+      tags: [Audit]
+      summary: List Audit Logs
+      operationId: listAuditLogs
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of audit logs
+          content:
+            application/json:
+              schema:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AuditLog'
+
+  /v1/audit-logs/{id}:
+    get:
+      tags: [Audit]
+      summary: Get Audit Log Details
+      operationId: getAuditLogDetails
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Audit log details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Booking\StoreBookingRequest;
 use App\Http\Controllers\Controller;
 use App\Services\BookingService;
+use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -14,7 +15,7 @@ class BookingController extends Controller
     {
     }
 
-    public function store(StoreBookingRequest $request)
+    public function store(StoreBookingRequest $request): JsonResponse
     {
         try {
             $booking = $this->bookingService->create((int) auth()->id(), $request->validated());
@@ -24,7 +25,7 @@ class BookingController extends Controller
         }
     }
 
-    public function start(int $id)
+    public function start(int $id): JsonResponse
     {
         try {
             $booking = $this->bookingService->start((int) auth()->id(), $id);
@@ -36,7 +37,7 @@ class BookingController extends Controller
         }
     }
 
-    public function end(int $id)
+    public function end(int $id): JsonResponse
     {
         try {
             $booking = $this->bookingService->end((int) auth()->id(), $id);
@@ -48,7 +49,7 @@ class BookingController extends Controller
         }
     }
 
-    public function index()
+    public function index(): JsonResponse
     {
         $bookings = $this->bookingService->list((int) auth()->id());
         return $this->successResponse('Bookings fetched successfully.', $bookings);

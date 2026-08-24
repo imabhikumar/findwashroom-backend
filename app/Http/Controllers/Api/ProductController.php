@@ -8,6 +8,7 @@ use App\Http\Requests\Product\UpdateProductRequest;
 use App\Http\Requests\Product\UpdateStockRequest;
 use App\Http\Resources\ProductResource;
 use App\Services\ProductService;
+use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ProductController extends Controller
@@ -28,7 +29,7 @@ class ProductController extends Controller
         return $this->successResponse('Available products fetched.', ProductResource::collection($products));
     }
 
-    public function categories()
+    public function categories(): JsonResponse
     {
         $categories = $this->productService->getCategories();
         return $this->successResponse('Product categories fetched.', $categories);

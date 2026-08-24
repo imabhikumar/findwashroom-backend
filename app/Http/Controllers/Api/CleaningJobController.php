@@ -6,6 +6,7 @@ use App\Http\Requests\CleaningJob\StoreCleaningJobRequest;
 use App\Http\Requests\CleaningJob\UploadCleaningProofRequest;
 use App\Http\Controllers\Controller;
 use App\Services\CleaningJobService;
+use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -15,7 +16,7 @@ class CleaningJobController extends Controller
     {
     }
 
-    public function store(StoreCleaningJobRequest $request)
+    public function store(StoreCleaningJobRequest $request): JsonResponse
     {
         try {
             $job = $this->cleaningJobService->create((int) auth()->id(), $request->validated());
@@ -25,13 +26,13 @@ class CleaningJobController extends Controller
         }
     }
 
-    public function index()
+    public function index(): JsonResponse
     {
         $jobs = $this->cleaningJobService->openJobs();
         return $this->successResponse('Open cleaning jobs fetched successfully.', $jobs);
     }
 
-    public function accept(int $id)
+    public function accept(int $id): JsonResponse
     {
         try {
             $job = $this->cleaningJobService->accept((int) auth()->id(), $id);
@@ -43,7 +44,7 @@ class CleaningJobController extends Controller
         }
     }
 
-    public function uploadProof(UploadCleaningProofRequest $request, int $id)
+    public function uploadProof(UploadCleaningProofRequest $request, int $id): JsonResponse
     {
         try {
             $proofPath = $request->file('proof')->store('cleaning-jobs', 'public');

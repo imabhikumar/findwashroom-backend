@@ -40,6 +40,13 @@ Route::get('/user', function (Request $request) {
 Route::post('/send-otp', [AuthController::class, 'sendOtp']);
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/customer/me', [CustomerAuthController::class, 'me']);
+    Route::post('/customer/logout', [CustomerAuthController::class, 'logout']);
+    Route::post('/customer/set-password', [CustomerAuthController::class, 'setPassword']);
+    Route::post('/customer/set-pin', [CustomerAuthController::class, 'setPin']);
+});
+
 Route::prefix('v1')->group(function () {
 
     // Public authentication
@@ -151,6 +158,11 @@ Route::prefix('v1')->group(function () {
             Route::get('/audit-logs/{id}', [AuditLogController::class, 'show']);
         });
     });
+});
+
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::get('/v1/audit-logs', [AuditLogController::class, 'index']);
+    Route::get('/v1/audit-logs/{id}', [AuditLogController::class, 'show']);
 });
 
 // Simple API health/test endpoint

@@ -31,10 +31,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Hidden(['password', 'pin', 'remember_token'])]
 class User extends Authenticatable
 {
-        use HasApiTokens, HasFactory, Notifiable, HasUUID, AuditLoggable, SoftDeletes;
-
-    /** @use HasFactory<UserFactory> */
-    use HasApiTokens,HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasUUID, AuditLoggable, SoftDeletes;
 
     /**
      * Get the attributes that should be cast.
