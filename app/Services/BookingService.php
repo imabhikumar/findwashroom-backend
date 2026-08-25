@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Booking;
 use App\Repositories\BookingRepository;
 use App\Repositories\PropertyRepository;
 use Carbon\Carbon;

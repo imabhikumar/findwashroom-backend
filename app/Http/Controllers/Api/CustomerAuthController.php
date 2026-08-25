@@ -12,6 +12,7 @@ use App\Http\Requests\CustomerAuth\SetPasswordRequest;
 use App\Http\Requests\CustomerAuth\SetPinRequest;
 use App\Services\CustomerAuthService;
 use Illuminate\Http\Request;
+use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class CustomerAuthController extends Controller
@@ -94,7 +95,11 @@ class CustomerAuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()?->currentAccessToken()?->delete();
+        $token = $request->user()?->currentAccessToken();
+        if ($token instanceof PersonalAccessToken) {
+            $token->delete();
+        }
+
         return $this->successResponse('Logged out.');
     }
 }
