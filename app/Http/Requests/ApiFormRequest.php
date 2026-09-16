@@ -13,7 +13,7 @@ abstract class ApiFormRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Validation error.',
-            'data' => $validator->errors(),
-        ], 400));
+            'errors' => $validator->errors(),
+        ], 422));
     }
 }

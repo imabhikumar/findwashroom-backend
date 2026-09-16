@@ -6,7 +6,6 @@ use App\Models\Admin;
 use App\Repositories\AdminRepository;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use App\Models\User;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class AdminAuthService
@@ -88,9 +87,9 @@ class AdminAuthService
         ];
     }
 
-    public function setPin(User $admin, string $pin): User
+    public function setPin(Admin $admin, string $pin): Admin
     {
-        $admin->pin = $pin; // User model casts pin as hashed.
+        $admin->pin = $pin;
         $admin->save();
         return $admin->refresh();
     }

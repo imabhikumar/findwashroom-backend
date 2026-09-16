@@ -68,6 +68,16 @@ class User extends Authenticatable
         return $this->hasMany(Complaint::class, 'raised_by');
     }
 
+    public function wallet(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Wallet::class, 'user_id');
+    }
+
+    public function wallets(): HasMany
+    {
+        return $this->hasMany(Wallet::class, 'user_id');
+    }
+
     public function cleaningJobsAsOwner(): HasMany
     {
         return $this->hasMany(CleaningJob::class, 'owner_id');

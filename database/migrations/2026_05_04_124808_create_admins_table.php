@@ -13,11 +13,13 @@ return new class extends Migration
     {
         Schema::create('admins', function (Blueprint $table) {
             $table->id();
-            $table->string('mobile')->unique();
-            $table->string('role')->default('admin');
-            $table->string('name');
-            // add other necessary fields like name, email, etc.
+            $table->string('email', 200)->nullable();
+            $table->string('mobile', 191)->nullable();
+            $table->string('role', 191)->default('admin');
+            $table->string('pin')->nullable();
+            $table->string('name', 191);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

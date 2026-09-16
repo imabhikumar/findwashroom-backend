@@ -2,12 +2,30 @@
 
 namespace App\Models;
 
-/**
- * Admin is stored in the same `users` table (role = admin),
- * but kept as a separate model for clean domain boundaries.
- */
-class Admin extends User
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Sanctum\HasApiTokens;
+
+class Admin extends Authenticatable
 {
-    // Intentionally no extra fields. Role governance is handled in repository/middleware.
+    use HasApiTokens, SoftDeletes;
+
+    protected $table = 'admins';
+
+    protected $fillable = [
+        'email',
+        'mobile',
+        'role',
+        'name',
+        'pin',
+    ];
+
+    protected $hidden = [
+        'pin',
+    ];
+
+    protected $casts = [
+        'pin' => 'hashed',
+    ];
 }
 

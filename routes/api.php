@@ -19,6 +19,8 @@ use App\Http\Controllers\Api\TrustController;
 use App\Http\Controllers\Api\ServiceUnitController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\Api\Admin\AdminUserController;
+use App\Http\Controllers\Api\Admin\AdminPropertyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -82,9 +84,11 @@ Route::prefix('v1')->group(function () {
         Route::post('/customer/set-pin', [CustomerAuthController::class, 'setPin']);
 
         // Property owner
-        Route::post('/owner/properties', [PropertyController::class, 'store']);
-        Route::get('/owner/properties', [PropertyController::class, 'myProperties']);
-        Route::put('/owner/properties/{id}', [PropertyController::class, 'update']);
+        Route::middleware(['auth:sanctum', 'role:owner'])->group(function () {
+            Route::post('/owner/properties', [PropertyController::class, 'store']);
+            Route::get('/owner/properties', [PropertyController::class, 'myProperties']);
+            Route::put('/owner/properties/{id}', [PropertyController::class, 'update']);
+        });
 
         // Bookings
         Route::post('/bookings', [BookingController::class, 'store']);
@@ -143,6 +147,25 @@ Route::prefix('v1')->group(function () {
             Route::post('/logout', [AdminController::class, 'logout']);
             Route::get('/me', [AdminController::class, 'me']);
             Route::post('/set-pin', [AdminController::class, 'setPin']);
+
+            Route::get('/users', [AdminUserController::class, 'index']);
+            Route::post('/users', [AdminUserController::class, 'store']);
+            Route::get('/users/{id}', [AdminUserController::class, 'show']);
+            Route::put('/users/{id}', [AdminUserController::class, 'update']);
+            Route::post('/users/{id}/suspend', [AdminUserController::class, 'suspend']);
+            Route::post('/users/{id}/ban', [AdminUserController::class, 'ban']);
+            Route::post('/users/{id}/reactivate', [AdminUserController::class, 'reactivate']);
+            Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
+
+            Route::get('/properties', [AdminPropertyController::class, 'index']);
+            Route::post('/properties', [AdminPropertyController::class, 'store']);
+            Route::get('/properties/{id}', [AdminPropertyController::class, 'show']);
+            Route::put('/properties/{id}', [AdminPropertyController::class, 'update']);
+            Route::post('/properties/{id}/approve', [AdminPropertyController::class, 'approve']);
+            Route::post('/properties/{id}/reject', [AdminPropertyController::class, 'reject']);
+            Route::post('/properties/{id}/suspend', [AdminPropertyController::class, 'suspend']);
+            Route::post('/properties/{id}/ban', [AdminPropertyController::class, 'ban']);
+            Route::delete('/properties/{id}', [AdminPropertyController::class, 'destroy']);
 
             Route::get('/dashboard', [AdminDashboardController::class, 'index']);
             Route::get('/activity', [AdminActivityController::class, 'index']);

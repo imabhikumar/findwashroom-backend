@@ -13,16 +13,22 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Property extends Model
 {
 
-    use HasUUID, AuditLoggable, SoftDeletes;
+    use HasUUID, SoftDeletes;
 
     protected $fillable = [
         'owner_id',
+        'owner_user_id',
         'name',
         'description',
         'address',
         'city',
+        'state',
+        'country',
+        'pincode',
         'latitude',
         'longitude',
+        'property_type',
+        'status',
         'price_per_use',
         'average_rating',
         'total_reviews',
@@ -36,11 +42,17 @@ class Property extends Model
         'average_rating' => 'decimal:2',
         'total_reviews' => 'integer',
         'is_active' => 'boolean',
+        'deleted_at' => 'datetime',
     ];
 
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function serviceUnits(): HasMany
+    {
+        return $this->hasMany(ServiceUnit::class);
     }
 
     public function bookings(): HasMany

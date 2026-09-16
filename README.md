@@ -128,3 +128,7 @@ POST	/api/v1/admin/set-pin	pin (required, 4–8 digits)
 GET	/api/v1/admin/dashboard	—
 GET	/api/v1/admin/activity	—
 GET	/api/v1/admin/activity/suspicious	— -->
+for abhishek referece : 15 sept 26
+<!-- Main API listing: http://127.0.0.1:8000/docs
+OpenAPI spec: http://127.0.0.1:8000/docs.openapi
+Postman collection: http://127.0.0.1:8000/docs.postman -->

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Booking;
 use App\Models\CleaningJob;
 use App\Models\Complaint;
+use App\Models\Payout;
 use App\Models\Property;
 use App\Models\Review;
 use App\Models\ServiceType;
@@ -213,11 +214,117 @@ class P0ApiBusinessTest extends TestCase
         $this->actingAs($this->user(['role' => 'customer']))->postJson('/api/v1/payments/order', [])->assertBadRequest();
     }
 
+    public function test_owner_property_routes_require_owner_role(): void
+    {
+        $owner = $this->user(['role' => 'owner']);
+        $customer = $this->user(['role' => 'customer']);
+        $cleaner = $this->user(['role' => 'cleaner']);
+        $property = $this->property($owner);
+
+        $this->actingAs($owner)->getJson('/api/v1/owner/properties')->assertOk();
+        $this->actingAs($owner)->postJson('/api/v1/owner/properties', [
+            'name' => 'Owner Property',
+            'address' => '456 Owner Road',
+            'city' => 'Delhi',
+            'latitude' => 28.6139,
+            'longitude' => 77.2090,
+            'price_per_use' => 120,
+        ])->assertOk();
+        $this->actingAs($owner)->putJson('/api/v1/owner/properties/'.$property->id, [
+            'name' => 'Updated Owner Property',
+            'address' => '456 Owner Road',
+            'city' => 'Delhi',
+            'latitude' => 28.6139,
+            'longitude' => 77.2090,
+            'price_per_use' => 130,
+        ])->assertOk();
+
+        $this->actingAs($customer)->getJson('/api/v1/owner/properties')->assertForbidden();
+        $this->actingAs($customer)->postJson('/api/v1/owner/properties', [
+            'name' => 'Blocked Property',
+            'address' => '789 Customer Street',
+            'city' => 'Chennai',
+            'latitude' => 13.0827,
+            'longitude' => 80.2707,
+            'price_per_use' => 100,
+        ])->assertForbidden();
+        $this->actingAs($customer)->putJson('/api/v1/owner/properties/'.$property->id, [
+            'name' => 'Customer Update',
+            'address' => '789 Customer Street',
+            'city' => 'Chennai',
+            'latitude' => 13.0827,
+            'longitude' => 80.2707,
+            'price_per_use' => 100,
+        ])->assertForbidden();
+
+        $this->actingAs($cleaner)->getJson('/api/v1/owner/properties')->assertForbidden();
+        $this->actingAs($cleaner)->postJson('/api/v1/owner/properties', [
+            'name' => 'Blocked Cleaner Property',
+            'address' => '123 Cleaner Lane',
+            'city' => 'Pune',
+            'latitude' => 18.5204,
+            'longitude' => 73.8567,
+            'price_per_use' => 110,
+        ])->assertForbidden();
+        $this->actingAs($cleaner)->putJson('/api/v1/owner/properties/'.$property->id, [
+            'name' => 'Cleaner Update',
+            'address' => '123 Cleaner Lane',
+            'city' => 'Pune',
+            'latitude' => 18.5204,
+            'longitude' => 73.8567,
+            'price_per_use' => 110,
+        ])->assertForbidden();
+    }
+
     public function test_wallet_routes_require_authentication(): void
     {
         $this->getJson('/api/v1/wallet')->assertUnauthorized();
         $this->getJson('/api/v1/wallet/transactions')->assertUnauthorized();
         $this->postJson('/api/v1/wallet/request-payout', [])->assertUnauthorized();
+    }
+
+    public function test_authenticated_wallet_summary_transactions_and_payout_are_scoped_to_the_current_user(): void
+    {
+        $owner = $this->user(['role' => 'owner']);
+        $customer = $this->user(['role' => 'customer']);
+
+        $ownerWallet = $owner->wallet()->create([
+            'wallet_type' => 'customer',
+            'balance' => 500,
+            'currency' => 'INR',
+            'status' => 'active',
+        ]);
+        $customerWallet = $customer->wallet()->create([
+            'wallet_type' => 'customer',
+            'balance' => 250,
+            'currency' => 'INR',
+            'status' => 'active',
+        ]);
+
+        $customerWallet->transactions()->create([
+            'transaction_type' => 'credit',
+            'amount' => 250,
+            'balance_after' => 250,
+            'description' => 'Initial balance',
+            'status' => 'completed',
+        ]);
+
+        $this->actingAs($customer)->getJson('/api/v1/wallet')->assertOk()
+            ->assertJsonPath('data.balance', 250);
+
+        $this->actingAs($customer)->getJson('/api/v1/wallet/transactions')->assertOk()
+            ->assertJsonPath('data.data.0.description', 'Initial balance');
+
+        $this->actingAs($customer)->postJson('/api/v1/wallet/request-payout', [
+            'amount' => 100,
+            'payout_method' => 'bank_transfer',
+            'account_details' => ['account_number' => '1234567890', 'ifsc' => 'HDFC0001234'],
+        ])->assertOk()->assertJsonPath('data.amount', 100);
+
+        $this->assertSame(150.0, (float) $customerWallet->fresh()->balance);
+        $this->assertSame($customer->id, Payout::latest()->first()->user_id);
+        $this->actingAs($owner)->getJson('/api/v1/wallet')->assertOk()
+            ->assertJsonPath('data.balance', 500);
     }
 
     private function user(array $attributes = []): User

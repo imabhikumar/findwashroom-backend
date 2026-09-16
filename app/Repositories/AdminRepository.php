@@ -4,10 +4,8 @@ namespace App\Repositories;
 
 use App\Models\Admin;
 use App\Models\AdminOtp;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class AdminRepository
 {
@@ -21,23 +19,22 @@ class AdminRepository
             ->first();
     }
 
-    public function findOrCreateAdminByOtp(string $identifier): User
+    public function findOrCreateAdminByOtp(string $channel, string $identifier): Admin
     {
-        // Try to find admin
-        $admin = User::where('email', $identifier)
+        $column = strtolower($channel) === 'email' ? 'email' : 'mobile';
+
+        $admin = Admin::where($column, $identifier)
             ->where('role', 'admin')
             ->first();
-            
+
         if (!$admin) {
-            // Create admin if not exists
-            $admin = User::create([
+            $admin = Admin::create([
                 'name' => 'Admin User',
-                'email' => $identifier,
+                $column => $identifier,
                 'role' => 'admin',
-                'status' => 'active',
             ]);
         }
-        
+
         return $admin;
     }
 

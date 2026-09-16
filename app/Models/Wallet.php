@@ -11,9 +11,7 @@ use App\Traits\AuditLoggable;
 
 class Wallet extends Model
 {
-        use HasUUID, AuditLoggable, SoftDeletes;
-
-    use SoftDeletes;
+    use HasUUID, AuditLoggable, SoftDeletes;
 
     protected $fillable = [
         'user_id',
