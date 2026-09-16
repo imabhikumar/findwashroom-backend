@@ -21,6 +21,9 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\Admin\AdminPropertyController;
+use App\Http\Controllers\Api\Admin\AdminBookingController;
+use App\Http\Controllers\Api\Admin\AdminPaymentController;
+use App\Http\Controllers\Api\Admin\AdminPayoutController;
 
 /*
 |--------------------------------------------------------------------------
@@ -166,6 +169,22 @@ Route::prefix('v1')->group(function () {
             Route::post('/properties/{id}/suspend', [AdminPropertyController::class, 'suspend']);
             Route::post('/properties/{id}/ban', [AdminPropertyController::class, 'ban']);
             Route::delete('/properties/{id}', [AdminPropertyController::class, 'destroy']);
+
+            Route::get('/bookings/stats', [AdminBookingController::class, 'stats']);
+            Route::get('/bookings', [AdminBookingController::class, 'index']);
+            Route::get('/bookings/{id}', [AdminBookingController::class, 'show']);
+            Route::post('/bookings/{id}/cancel', [AdminBookingController::class, 'cancel']);
+            Route::post('/bookings/{id}/force-complete', [AdminBookingController::class, 'forceComplete']);
+            Route::post('/bookings/{id}/extend', [AdminBookingController::class, 'extend']);
+
+            Route::get('/payments/stats', [AdminPaymentController::class, 'stats']);
+            Route::get('/payments', [AdminPaymentController::class, 'index']);
+            Route::get('/payments/{id}', [AdminPaymentController::class, 'show']);
+            Route::post('/payments/{id}/refund', [AdminPaymentController::class, 'refund']);
+
+            Route::get('/payouts', [AdminPayoutController::class, 'index']);
+            Route::post('/payouts/{id}/approve', [AdminPayoutController::class, 'approve']);
+            Route::post('/payouts/{id}/reject', [AdminPayoutController::class, 'reject']);
 
             Route::get('/dashboard', [AdminDashboardController::class, 'index']);
             Route::get('/activity', [AdminActivityController::class, 'index']);
