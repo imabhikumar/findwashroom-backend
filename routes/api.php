@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\Admin\AdminPayoutController;
 use App\Http\Controllers\Api\Admin\AdminComplaintController;
 use App\Http\Controllers\Api\Admin\AdminDisputeController;
 use App\Http\Controllers\Api\Admin\AdminSettingsController;
+use App\Http\Controllers\Api\Admin\AdminReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -216,6 +217,13 @@ Route::prefix('v1')->group(function () {
             Route::post('/settings/cancellation-rules', [AdminSettingsController::class, 'storeCancellation']);
             Route::put('/settings/cancellation-rules/{id}', [AdminSettingsController::class, 'updateCancellation']);
             Route::delete('/settings/cancellation-rules/{id}', [AdminSettingsController::class, 'deleteCancellation']);
+
+            Route::get('/reports/bookings', [AdminReportController::class, 'bookings']);
+            Route::get('/reports/revenue', [AdminReportController::class, 'revenue']);
+            Route::get('/reports/complaints', [AdminReportController::class, 'complaints']);
+            Route::get('/reports/trust', [AdminReportController::class, 'trust']);
+            Route::get('/reports/safety', [AdminReportController::class, 'safety']);
+            Route::get('/reports/export', [AdminReportController::class, 'export']);
 
             Route::get('/dashboard', [AdminDashboardController::class, 'index']);
             Route::get('/activity', [AdminActivityController::class, 'index']);
