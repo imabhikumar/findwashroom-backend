@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\Admin\AdminPaymentController;
 use App\Http\Controllers\Api\Admin\AdminPayoutController;
 use App\Http\Controllers\Api\Admin\AdminComplaintController;
 use App\Http\Controllers\Api\Admin\AdminDisputeController;
+use App\Http\Controllers\Api\Admin\AdminSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -197,6 +198,24 @@ Route::prefix('v1')->group(function () {
 
             Route::post('/disputes/{id}/resolve', [AdminDisputeController::class, 'resolve']);
             Route::post('/disputes/{id}/reject-appeal', [AdminDisputeController::class, 'rejectAppeal']);
+
+            Route::get('/settings', [AdminSettingsController::class, 'index']);
+            Route::put('/settings', [AdminSettingsController::class, 'update']);
+
+            Route::get('/settings/commission-rules', [AdminSettingsController::class, 'commissionRules']);
+            Route::post('/settings/commission-rules', [AdminSettingsController::class, 'storeCommission']);
+            Route::put('/settings/commission-rules/{id}', [AdminSettingsController::class, 'updateCommission']);
+            Route::delete('/settings/commission-rules/{id}', [AdminSettingsController::class, 'deleteCommission']);
+
+            Route::get('/settings/refund-rules', [AdminSettingsController::class, 'refundRules']);
+            Route::post('/settings/refund-rules', [AdminSettingsController::class, 'storeRefund']);
+            Route::put('/settings/refund-rules/{id}', [AdminSettingsController::class, 'updateRefund']);
+            Route::delete('/settings/refund-rules/{id}', [AdminSettingsController::class, 'deleteRefund']);
+
+            Route::get('/settings/cancellation-rules', [AdminSettingsController::class, 'cancellationRules']);
+            Route::post('/settings/cancellation-rules', [AdminSettingsController::class, 'storeCancellation']);
+            Route::put('/settings/cancellation-rules/{id}', [AdminSettingsController::class, 'updateCancellation']);
+            Route::delete('/settings/cancellation-rules/{id}', [AdminSettingsController::class, 'deleteCancellation']);
 
             Route::get('/dashboard', [AdminDashboardController::class, 'index']);
             Route::get('/activity', [AdminActivityController::class, 'index']);
