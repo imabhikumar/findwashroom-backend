@@ -24,6 +24,8 @@ use App\Http\Controllers\Api\Admin\AdminPropertyController;
 use App\Http\Controllers\Api\Admin\AdminBookingController;
 use App\Http\Controllers\Api\Admin\AdminPaymentController;
 use App\Http\Controllers\Api\Admin\AdminPayoutController;
+use App\Http\Controllers\Api\Admin\AdminComplaintController;
+use App\Http\Controllers\Api\Admin\AdminDisputeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -185,6 +187,16 @@ Route::prefix('v1')->group(function () {
             Route::get('/payouts', [AdminPayoutController::class, 'index']);
             Route::post('/payouts/{id}/approve', [AdminPayoutController::class, 'approve']);
             Route::post('/payouts/{id}/reject', [AdminPayoutController::class, 'reject']);
+
+            Route::get('/complaints/stats', [AdminComplaintController::class, 'stats']);
+            Route::get('/complaints', [AdminComplaintController::class, 'index']);
+            Route::get('/complaints/{id}', [AdminComplaintController::class, 'show']);
+            Route::put('/complaints/{id}', [AdminComplaintController::class, 'update']);
+            Route::post('/complaints/{id}/resolve', [AdminComplaintController::class, 'resolve']);
+            Route::post('/complaints/{id}/escalate', [AdminComplaintController::class, 'escalate']);
+
+            Route::post('/disputes/{id}/resolve', [AdminDisputeController::class, 'resolve']);
+            Route::post('/disputes/{id}/reject-appeal', [AdminDisputeController::class, 'rejectAppeal']);
 
             Route::get('/dashboard', [AdminDashboardController::class, 'index']);
             Route::get('/activity', [AdminActivityController::class, 'index']);
