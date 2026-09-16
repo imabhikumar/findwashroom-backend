@@ -17,6 +17,7 @@ class Badge extends Model
         'icon',
         'description',
         'type',
+        'badge_type',
         'criteria',
         'min_trust_score',
         'is_auto_assign',
@@ -29,6 +30,9 @@ class Badge extends Model
         'is_auto_assign' => 'boolean',
         'is_active' => 'boolean',
     ];
+
+    public function getBadgeTypeAttribute(): ?string { return $this->attributes['type'] ?? null; }
+    public function setBadgeTypeAttribute(?string $value): void { $this->attributes['type'] = $value; }
 
     public function users(): BelongsToMany
     {

@@ -28,6 +28,9 @@ use App\Http\Controllers\Api\Admin\AdminComplaintController;
 use App\Http\Controllers\Api\Admin\AdminDisputeController;
 use App\Http\Controllers\Api\Admin\AdminSettingsController;
 use App\Http\Controllers\Api\Admin\AdminReportController;
+use App\Http\Controllers\Api\Admin\AdminTrustController;
+use App\Http\Controllers\Api\Admin\AdminBadgeController;
+use App\Http\Controllers\Api\Admin\AdminSafetyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -224,6 +227,31 @@ Route::prefix('v1')->group(function () {
             Route::get('/reports/trust', [AdminReportController::class, 'trust']);
             Route::get('/reports/safety', [AdminReportController::class, 'safety']);
             Route::get('/reports/export', [AdminReportController::class, 'export']);
+
+            Route::get('/trust/events', [AdminTrustController::class, 'events']);
+            Route::get('/trust/users', [AdminTrustController::class, 'users']);
+            Route::get('/trust/users/{id}', [AdminTrustController::class, 'show']);
+            Route::post('/trust/events', [AdminTrustController::class, 'storeEvent']);
+
+            Route::get('/badges', [AdminBadgeController::class, 'index']);
+            Route::post('/badges', [AdminBadgeController::class, 'store']);
+            Route::post('/badges/assign', [AdminBadgeController::class, 'assign']);
+            Route::post('/badges/revoke', [AdminBadgeController::class, 'revoke']);
+            Route::put('/badges/{id}', [AdminBadgeController::class, 'update']);
+            Route::delete('/badges/{id}', [AdminBadgeController::class, 'destroy']);
+
+            Route::get('/safety/sos', [AdminSafetyController::class, 'sos']);
+            Route::get('/safety/sos/{id}', [AdminSafetyController::class, 'showSos']);
+            Route::post('/safety/sos/{id}/acknowledge', [AdminSafetyController::class, 'acknowledge']);
+            Route::post('/safety/sos/{id}/resolve', [AdminSafetyController::class, 'resolveSos']);
+            Route::post('/safety/sos/{id}/false-alarm', [AdminSafetyController::class, 'falseAlarm']);
+            Route::get('/safety/incidents', [AdminSafetyController::class, 'incidents']);
+            Route::get('/safety/incidents/{id}', [AdminSafetyController::class, 'showIncident']);
+            Route::post('/safety/incidents', [AdminSafetyController::class, 'storeIncident']);
+            Route::put('/safety/incidents/{id}', [AdminSafetyController::class, 'updateIncident']);
+            Route::post('/safety/incidents/{id}/escalate', [AdminSafetyController::class, 'escalateIncident']);
+            Route::get('/safety/reports', [AdminSafetyController::class, 'reports']);
+            Route::get('/safety/stats', [AdminSafetyController::class, 'stats']);
 
             Route::get('/dashboard', [AdminDashboardController::class, 'index']);
             Route::get('/activity', [AdminActivityController::class, 'index']);

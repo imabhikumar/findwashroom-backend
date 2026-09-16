@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TrustEvent extends Model
 {
+    protected $table = 'trust_events';
+
     protected $fillable = [
         'user_id',
         'event_type',
