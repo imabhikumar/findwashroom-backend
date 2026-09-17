@@ -32,9 +32,9 @@ class PropertyService
         return $this->propertyRepository->update($property, $payload);
     }
 
-    public function publicList()
+    public function publicList(array $filters = [])
     {
-        return $this->propertyRepository->getPublicList();
+        return $this->propertyRepository->getPublicList($filters);
     }
 
     public function detail(int $id)

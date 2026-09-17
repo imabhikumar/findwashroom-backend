@@ -13,6 +13,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Traits\HasUUID;
 use App\Traits\AuditLoggable;
+use App\Traits\HasRoles;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 
@@ -31,7 +32,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Hidden(['password', 'pin', 'remember_token'])]
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasUUID, AuditLoggable, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, HasUUID, AuditLoggable, HasRoles, SoftDeletes;
 
     /**
      * Get the attributes that should be cast.
@@ -87,4 +88,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(CleaningJob::class, 'assigned_cleaner_id');
     }
+
+
 }

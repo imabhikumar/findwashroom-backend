@@ -19,9 +19,11 @@ class BookingController extends Controller
     {
         try {
             $booking = $this->bookingService->create((int) auth()->id(), $request->validated());
-            return $this->successResponse('Booking created successfully.', $booking);
+            return $this->successResponse('Booking created successfully.', $booking, 201);
         } catch (NotFoundHttpException $e) {
             return $this->errorResponse($e->getMessage(), null, 404);
+        } catch (BadRequestHttpException $e) {
+            return $this->errorResponse($e->getMessage(), null, 409);
         }
     }
 

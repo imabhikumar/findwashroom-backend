@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\Admin\AdminReportController;
 use App\Http\Controllers\Api\Admin\AdminTrustController;
 use App\Http\Controllers\Api\Admin\AdminBadgeController;
 use App\Http\Controllers\Api\Admin\AdminSafetyController;
+use App\Http\Controllers\Api\RoleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -93,6 +94,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/customer/set-password', [CustomerAuthController::class, 'setPassword']);
         Route::post('/customer/set-pin', [CustomerAuthController::class, 'setPin']);
 
+        // Generic profile + multi-role support (API Contract Module 1).
+        // Works regardless of the identity's currently active role.
+        Route::get('/auth/profile', [RoleController::class, 'profile']);
+        Route::get('/auth/roles', [RoleController::class, 'myRoles']);
+        Route::post('/auth/roles', [RoleController::class, 'requestRole']);
+        Route::post('/auth/switch-role', [RoleController::class, 'switchRole']);
+
         // Property owner
         Route::middleware(['auth:sanctum', 'role:owner'])->group(function () {
             Route::post('/owner/properties', [PropertyController::class, 'store']);
@@ -101,7 +109,7 @@ Route::prefix('v1')->group(function () {
         });
 
         // Bookings
-        Route::post('/bookings', [BookingController::class, 'store']);
+        Route::post('/bookings', [BookingController::class, 'store'])->middleware('role:customer');
         Route::post('/bookings/{id}/start', [BookingController::class, 'start']);
         Route::post('/bookings/{id}/end', [BookingController::class, 'end']);
         Route::get('/bookings', [BookingController::class, 'index']);
