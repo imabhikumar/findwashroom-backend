@@ -94,7 +94,11 @@ class PaymentService
                 throw new BadRequestHttpException('Payment order mismatch.');
             }
             if (! $this->razorpayService->verifySignature($orderId, $paymentId, $signature)) {
-                throw new BadRequestHttpException('Invalid payment signature.');
+                // Do not mark a gateway attempt failed solely because verification failed: the gateway
+                // payment may have succeeded. Keep the booking unpaid and the order pending so the
+                // customer can retry verification safely instead of risking a duplicate charge.
+                $this->bookingRepository->update($booking, ['payment_status' => 'unpaid']);
+                throw new BadRequestHttpException('Payment verification failed. Please retry.');
             }
 
             $this->paymentRepository->update($payment, [
@@ -130,6 +134,45 @@ class PaymentService
         $bookingId,
         "Commission from booking #{$bookingId}"
     );
+        });
+    }
+
+    public function markFailed(int $customerId, int $bookingId, ?string $orderId = null, ?string $paymentId = null): array
+    {
+        return DB::transaction(function () use ($customerId, $bookingId, $orderId, $paymentId) {
+            $booking = $this->bookingRepository->findByIdAndCustomerForUpdate($bookingId, $customerId);
+            if (! $booking) {
+                throw new NotFoundHttpException('Booking not found.');
+            }
+
+            if (($booking->payment_status ?? 'unpaid') === 'paid') {
+                return ['booking_id' => $booking->id, 'payment_status' => 'paid'];
+            }
+
+            $payment = $this->paymentRepository->findPendingByBookingId($bookingId);
+            if (! $payment) {
+                return ['booking_id' => $booking->id, 'payment_status' => 'unpaid', 'payment_record' => 'none'];
+            }
+
+            if ($orderId !== null && $payment->gateway_order_id !== $orderId) {
+                throw new BadRequestHttpException('Payment order mismatch.');
+            }
+
+            $this->paymentRepository->update($payment, [
+                'status' => 'failed',
+                'gateway_payment_id' => $paymentId ?: $payment->gateway_payment_id,
+            ]);
+
+            // A failed gateway attempt must never mark the booking as paid.
+            if (($booking->payment_status ?? 'unpaid') !== 'unpaid') {
+                $this->bookingRepository->update($booking, ['payment_status' => 'unpaid']);
+            }
+
+            return [
+                'booking_id' => $booking->id,
+                'payment_status' => 'unpaid',
+                'payment_attempt_status' => 'failed',
+            ];
         });
     }
 

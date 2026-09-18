@@ -53,13 +53,6 @@ Route::get('/user', function (Request $request) {
 Route::post('/send-otp', [AuthController::class, 'sendOtp']);
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/customer/me', [CustomerAuthController::class, 'me']);
-    Route::post('/customer/logout', [CustomerAuthController::class, 'logout']);
-    Route::post('/customer/set-password', [CustomerAuthController::class, 'setPassword']);
-    Route::post('/customer/set-pin', [CustomerAuthController::class, 'setPin']);
-});
-
 Route::prefix('v1')->group(function () {
 
     // Public authentication
@@ -109,7 +102,8 @@ Route::prefix('v1')->group(function () {
         });
 
         // Bookings
-        Route::post('/bookings', [BookingController::class, 'store'])->middleware('role:customer');
+        Route::post('/bookings', [BookingController::class, 'store']);
+        Route::get('/bookings/{id}', [BookingController::class, 'show']);
         Route::post('/bookings/{id}/start', [BookingController::class, 'start']);
         Route::post('/bookings/{id}/end', [BookingController::class, 'end']);
         Route::get('/bookings', [BookingController::class, 'index']);

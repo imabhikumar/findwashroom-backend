@@ -19,11 +19,21 @@ class BookingController extends Controller
     {
         try {
             $booking = $this->bookingService->create((int) auth()->id(), $request->validated());
-            return $this->successResponse('Booking created successfully.', $booking, 201);
+            return $this->successResponse('Booking created successfully.', $booking);
+        } catch (NotFoundHttpException $e) {
+            return $this->errorResponse($e->getMessage(), null, 404);
+        }
+    }
+
+    public function cancel(int $id): JsonResponse
+    {
+        try {
+            $booking = $this->bookingService->cancel((int) auth()->id(), $id);
+            return $this->successResponse('Booking cancelled successfully.', $booking);
         } catch (NotFoundHttpException $e) {
             return $this->errorResponse($e->getMessage(), null, 404);
         } catch (BadRequestHttpException $e) {
-            return $this->errorResponse($e->getMessage(), null, 409);
+            return $this->errorResponse($e->getMessage(), null, 400);
         }
     }
 
